@@ -1,38 +1,36 @@
+version: '3.8'
+
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./backend:/app
-    environment:
-      - FLASK_ENV=development
-      - DATABASE_URL=postgresql://meloman_user:meloman_pass@db:5432/meloman_db
-    depends_on:
-      - db
-    restart: always
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-    environment:
-      - HOST=0.0.0.0
-    restart: always
-
   db:
     image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4780
+      POSTGRES_DB: pochta_db
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pochta_network  
+
+  web:
+    build: .
+    depends_on:
+      - db
     environment:
-      POSTGRES_USER: meloman_user
-      POSTGRES_PASSWORD: meloman_pass
-      POSTGRES_DB: meloman_db
-    restart: always
+      DATABASE_URL: postgresql://postgres:4780@db/pochta_db
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    command: python app.py
+    networks:
+      - pochta_network
+
+networks:
+  pochta_network:
+    driver: bridge
 
 volumes:
-  pgdata:
+  postgres_data:
