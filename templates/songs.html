@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Ваши песни{% endblock %}
+{% block content %}
+<section class="py-3">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="fw-extrabold m-0"><i class="bi bi-music-note-list me-2"></i>Ваш список песен</h2>
+    <form class="d-flex align-items-center gap-2" method="get" action="{{ url_for('songs') }}" autocomplete="off">
+      <input id="artistFilter" name="artist" class="form-control" style="max-width:260px"
+             placeholder="Фильтр по исполнителю" value="{{ artist_filter or '' }}" list="artistFilterList">
+      <datalist id="artistFilterList"></datalist>
+      <button class="btn btn-ghost" type="submit"><i class="bi bi-funnel me-1"></i>Фильтровать</button>
+      {% if artist_filter %}
+        <a class="btn btn-ghost" href="{{ url_for('songs') }}"><i class="bi bi-x-circle me-1"></i>Сброс</a>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if artist_filter %}
+    <div class="mb-3">
+      <span class="badge-modern"><i class="bi bi-person-music me-1"></i>Фильтр: <strong class="ms-1">{{ artist_filter }}</strong></span>
+    </div>
+  {% endif %}
+
+  <!-- Форма добавления -->
+  <div class="glass p-3 mb-3">
+    <form method="post" class="row gy-2 gx-3 align-items-end" autocomplete="off">
+      {{ form.hidden_tag() }}
+      <div class="col-md-5">
+        {{ form.title.label(class="form-label") }}
+        <input id="titleInput" name="title" class="form-control" placeholder="Название" list="titleList">
+        <datalist id="titleList"></datalist>
+        {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="col-md-5">
+        {{ form.artist.label(class="form-label") }}
+        <input id="artistInput" name="artist" class="form-control" placeholder="Исполнитель" list="artistList">
+        <datalist id="artistList"></datalist>
+        {% for e in form.artist.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-gradient w-100" type="submit">Добавить</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Таблица -->
+  <div class="glass overflow-hidden">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th class="text-secondary">#</th>
+            <th>Трек</th>
+            <th>Исполнитель</th>
+            <th class="text-end">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for t in tracks %}
+          <tr>
+            <td class="text-secondary">{{ loop.index }}</td>
+            <td class="fw-semibold">{{ t.title }}</td>
+            <td class="text-secondary">{{ t.artist }}</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('delete_song', track_id=t.id) }}"
+                    onsubmit="return confirm('Удалить «{{ t.title }}»?')">
+                <button class="btn btn-ghost btn-sm"><i class="bi bi-trash me-1"></i>Удалить</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-5">
+              <div class="text-secondary">
+                <i class="bi bi-vinyl me-2"></i>Список пуст. Добавьте первый трек выше
+                или откройте «<a href="{{ url_for('lucky') }}">Доверюсь удаче</a>».
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- JS для автодополнения -->
+<script>
+(function() {
+  const artistInput   = document.getElementById('artistInput');
+  const titleInput    = document.getElementById('titleInput');
+  const artistList    = document.getElementById('artistList');
+  const titleList     = document.getElementById('titleList');
+  const artistFilter  = document.getElementById('artistFilter');
+  const artistFilterList = document.getElementById('artistFilterList');
+
+  function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+  async function j(url){ const r=await fetch(url); return r.ok? r.json():[]; }
+  function fill(el, items){ el.innerHTML=''; items.forEach(v=>{ const o=document.createElement('option'); o.value=v; el.appendChild(o); }); }
+
+  const updArtist = debounce(async ()=>{
+    const q=(artistInput.value||'').trim(); if(!q){ artistList.innerHTML=''; return; }
+    fill(artistList, await j(`/api/suggest/artists?q=${encodeURIComponent(q)}`));
+  }, 180);
+
+  const updTitle = debounce(async ()=>{
+    const q=(titleInput.value||'').trim(); if(!q){ titleList.innerHTML=''; return; }
+    const a=(artistInput.value||'').trim();
+    fill(titleList, await j(`/api/suggest/tracks?q=${encodeURIComponent(q)}&artist=${encodeURIComponent(a)}`));
+  }, 180);
+
+  const updFilter = debounce(async ()=>{
+    const q=(artistFilter.value||'').trim(); if(!q){ artistFilterList.innerHTML=''; return; }
+    fill(artistFilterList, await j(`/api/suggest/artists?q=${encodeURIComponent(q)}`));
+  }, 180);
+
+  artistInput?.addEventListener('input', ()=>{ titleInput.value=''; titleList.innerHTML=''; updArtist(); });
+  titleInput?.addEventListener('input', updTitle);
+  artistFilter?.addEventListener('input', updFilter);
+})();
+</script>
+{% endblock %}

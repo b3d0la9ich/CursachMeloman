@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+{% block content %}
+<section class="py-4">
+  <h2 class="fw-extrabold mb-3">Личный кабинет</h2>
+  <div class="features-grid">
+    <div class="glass feature">
+      <i class="bi bi-music-note-list icon"></i>
+      <h3>Список песен</h3>
+      <p>Управляйте своей библиотекой — добавляйте, удаляйте, фильтруйте по артистам.</p>
+      <a href="{{ url_for('songs') }}" class="btn btn-gradient">Открыть список</a>
+    </div>
+    <div class="glass feature">
+      <i class="bi bi-shuffle icon"></i>
+      <h3>Доверюсь удаче</h3>
+      <p>Предложим трек из каталога, которого ещё нет у вас — может стать любимым!</p>
+      <a href="{{ url_for('lucky') }}" class="btn btn-ghost">Испытать удачу</a>
+    </div>
+    <div class="glass feature">
+      <i class="bi bi-box-arrow-right icon"></i>
+      <h3>Выход</h3>
+      <p>Завершить сессию и выйти из аккаунта.</p>
+      <a href="{{ url_for('logout') }}" class="btn btn-warning">Выйти</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

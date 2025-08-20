@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Доверюсь удаче{% endblock %}
+{% block content %}
+<section class="py-4">
+  <h2 class="fw-extrabold mb-3"><i class="bi bi-shuffle me-2"></i>Доверюсь удаче</h2>
+
+  {% if picked %}
+    <div class="glass p-4 d-flex align-items-center justify-content-between fade-up">
+      <div>
+        <div class="text-secondary mb-1">Случайный трек, которого ещё нет у вас:</div>
+        <div class="h4 m-0"><span class="fw-bold">{{ picked.title }}</span> — <span class="text-secondary">{{ picked.artist }}</span></div>
+      </div>
+      <div class="d-flex gap-2">
+        <form method="post" action="{{ url_for('lucky_add', catalog_id=picked.id) }}">
+          <button class="btn btn-gradient"><i class="bi bi-plus-lg me-1"></i>Добавить</button>
+        </form>
+        <a class="btn btn-ghost" href="{{ url_for('lucky') }}"><i class="bi bi-arrow-repeat me-1"></i>Другой трек</a>
+      </div>
+    </div>
+  {% else %}
+    <div class="glass p-5 text-center fade-up">
+      <div class="display-6 mb-2"><i class="bi bi-emoji-sunglasses"></i></div>
+      <p class="lead mb-3">Похоже, весь каталог уже в вашем списке!</p>
+      <a class="btn btn-gradient" href="{{ url_for('songs') }}"><i class="bi bi-music-note-list me-2"></i>Перейти к списку песен</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
