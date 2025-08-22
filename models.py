@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from sqlalchemy import func
+
 db = SQLAlchemy()
 
 
@@ -42,9 +44,13 @@ class Catalog(db.Model):
     title = db.Column(db.String(255), nullable=False, index=True)
     artist = db.Column(db.String(255), nullable=False, index=True)
 
+    year = db.Column(db.Integer)              # год выпуска
+    album = db.Column(db.String(255))         # альбом
+    lyrics = db.Column(db.Text)               # текст песни
+
     __table_args__ = (db.UniqueConstraint("title", "artist", name="uq_catalog"),)
 
-
+                         
 def seed_catalog(db_session):
     """Наполнение каталога тестовыми треками (однократно)."""
     if db_session.query(Catalog).count() > 0:
@@ -66,3 +72,30 @@ def seed_catalog(db_session):
     ]
     db_session.bulk_save_objects([Catalog(title=t, artist=a) for t, a in sample])
     db_session.commit()
+
+class Playlist(db.Model):
+    __tablename__ = "playlists"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    cover = db.Column(db.String(512), nullable=True)  # относительный путь внутри /static, например: uploads/playlists/xxx.jpg
+    created_at = db.Column(db.DateTime, server_default=func.now(), nullable=False)
+
+    owner = db.relationship("User", backref=db.backref("playlists", cascade="all, delete-orphan", lazy="dynamic"))
+
+    def __repr__(self):
+        return f"<Playlist {self.id}:{self.title!r}>"
+
+
+class PlaylistTrack(db.Model):
+    __tablename__ = "playlist_tracks"
+    playlist_id = db.Column(db.Integer, db.ForeignKey("playlists.id", ondelete="CASCADE"), primary_key=True)
+    track_id = db.Column(db.Integer, db.ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True)
+    added_at = db.Column(db.DateTime, server_default=func.now(), nullable=False)
+
+    playlist = db.relationship("Playlist", backref=db.backref("items", cascade="all, delete-orphan", lazy="dynamic"))
+    track = db.relationship("Track")
+
+    def __repr__(self):
+        return f"<PlaylistTrack pl={self.playlist_id} track={self.track_id}>"

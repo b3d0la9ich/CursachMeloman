@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Плейлисты{% endblock %}
+{% block content %}
+<section class="py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="fw-extrabold m-0"><i class="bi bi-collection-play me-2"></i>Плейлисты</h2>
+    <a class="btn btn-ghost" href="{{ url_for('dashboard') }}"><i class="bi bi-grid me-1"></i>Личный кабинет</a>
+  </div>
+
+  <div class="row g-3">
+    <!-- Форма создания -->
+    <div class="col-lg-4">
+      <div class="glass p-3 h-100">
+        <h5 class="mb-3">Создать плейлист</h5>
+        <form method="post" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+          <div class="mb-2">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control", placeholder="Название") }}
+            {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="mb-2">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows="3", placeholder="Описание (необязательно)") }}
+          </div>
+          <div class="mb-2">
+            {{ form.cover.label(class="form-label") }}
+            {{ form.cover(class="form-control") }}
+            <div class="form-text">PNG/JPG/WebP, до 5 МБ</div>
+          </div>
+          <button class="btn btn-gradient">{{ form.submit.label.text }}</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Карточки плейлистов -->
+    <div class="col-lg-8">
+      <div class="row g-3">
+        {% for pl in playlists %}
+          <div class="col-md-6">
+            <div class="glass p-0 h-100 d-flex flex-column">
+              <div class="ratio ratio-16x9 rounded-top"
+                   style="background: {% if pl.cover %} url('{{ url_for('static', filename=pl.cover) }}') center/cover no-repeat {% else %} linear-gradient(90deg, var(--brand-1), var(--brand-2)) {% endif %};"></div>
+              <div class="p-3">
+                <div class="d-flex align-items-start justify-content-between">
+                  <div>
+                    <div class="fw-bold fs-5">{{ pl.title }}</div>
+                    {% if pl.description %}<div class="text-secondary small">{{ pl.description }}</div>{% endif %}
+                  </div>
+                  <span class="badge-modern"><i class="bi bi-music-note-list me-1"></i>{{ counts.get(pl.id, 0) }}</span>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                  <a class="btn btn-ghost btn-sm" href="{{ url_for('playlist_detail', pl_id=pl.id) }}"><i class="bi bi-box-arrow-in-right me-1"></i>Открыть</a>
+                  <form method="post" action="{{ url_for('playlist_delete', pl_id=pl.id) }}" onsubmit="return confirm('Удалить плейлист «{{ pl.title }}»?')">
+                    <button class="btn btn-ghost btn-sm"><i class="bi bi-trash me-1"></i>Удалить</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="col-12">
+            <div class="glass p-4 text-center text-secondary">Плейлистов пока нет. Создайте первый слева.</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

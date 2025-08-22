@@ -1,4 +1,4 @@
-/* === ТЕМА === */
+/* === ТЕМА (тёмная по умолчанию) === */
 :root{
   --bg: #0b0f14;
   --bg-2: #0e141b;
@@ -13,6 +13,10 @@
 
   --shadow: 0 10px 30px rgba(0,0,0,0.35);
   --radius: 22px;
+
+  /* Поверх всего: z-index для модалки и подложки */
+  --bs-backdrop-zindex: 1990;
+  --bs-modal-zindex: 2000;
 }
 
 * { box-sizing: border-box; }
@@ -79,9 +83,7 @@ body{
 }
 
 /* Герой-секция */
-.hero{
-  padding: 72px 0 24px;
-}
+.hero{ padding: 72px 0 24px; }
 .hero-card{
   padding: 48px;
   position: relative;
@@ -149,14 +151,13 @@ body{
 .fade-in{ animation: fadeIn .35s ease both; }
 .fade-up{ animation: fadeUp .5s ease both; }
 .fade-up-delayed{ animation: fadeUp .7s .05s ease both; }
-
 @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
 @keyframes fadeUp{ from{opacity:0; transform: translateY(16px)} to{opacity:1; transform:none} }
 
 /* Тексты */
 .lead{ color: var(--muted); }
 
-/* Мелочи */
+/* Таблицы/формы */
 .table{ color: var(--text); }
 .table thead th{ color: #c9d6e4; }
 .form-label{ color: #c9d6e4; }
@@ -165,3 +166,183 @@ body{
   border: 1px solid rgba(255,255,255,0.14); border-radius: 12px;
 }
 .form-control::placeholder{ color: #9ab; }
+
+/* === Светлая тема === */
+body[data-theme="light"]{
+  --bg: #f5f7fb;
+  --bg-2: #eef1f7;
+  --card: rgba(255,255,255,0.75);
+  --card-border: rgba(0,0,0,0.08);
+  --text: #0b0f14;
+  --muted: #5c6673;
+
+  --brand-1: #2563eb;
+  --brand-2: #a855f7;
+  --brand-3: #16a34a;
+
+  --shadow: 0 10px 28px rgba(0,0,0,0.10);
+}
+
+body[data-theme="light"] .navbar-glass{
+  background: rgba(255,255,255,0.75);
+  border-bottom-color: rgba(0,0,0,0.06);
+  backdrop-filter: saturate(140%) blur(10px);
+}
+
+body[data-theme="light"] .btn-ghost{
+  color: var(--text);
+  border-color: rgba(0,0,0,0.12);
+}
+body[data-theme="light"] .btn-ghost:hover{
+  background: rgba(0,0,0,0.04);
+}
+
+body[data-theme="light"] .hero-card::after{
+  background: radial-gradient(800px 300px at 20% 0%, rgba(37,99,235,0.16), transparent 60%),
+              radial-gradient(600px 260px at 90% 0%, rgba(168,85,247,0.16), transparent 60%);
+}
+
+body[data-theme="light"] .table thead th{ color: #334155; }
+body[data-theme="light"] .form-label{ color: #334155; }
+body[data-theme="light"] .lead{ color: #5c6673; }
+
+
+/* --- Модалка всегда поверх всего --- */
+.modal-backdrop { 
+  position: fixed;                /* на весь вьюпорт */
+  z-index: 1990 !important; 
+}
+
+.modal { 
+  position: fixed;                /* не зависит от родителей со своими контекстами */
+  z-index: 2000 !important; 
+}
+
+.modal-content { position: relative; }
+
+/* Слои фона и стеклянные блоки не перехватывают клики и ниже модалки */
+.bg-layer { z-index: 0 !important; pointer-events: none; }
+
+/* Контрастный бокс для текста песен в модалке */
+.lyrics-scroll{
+  max-height: 45vh;                 /* прокрутка внутри модалки */
+  overflow: auto;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.48);      /* тёмный фон под текст */
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Сам текст — читаемый, без бледности */
+.lyrics{
+  white-space: pre-wrap;
+  margin: 0;
+  color: #eef3ff;                    /* светлый цвет */
+  line-height: 1.6;
+  font: 500 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+}
+
+/* Немного усилим заголовок и кнопку-аккордеон в модалке */
+.modal .accordion-button{
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+}
+.modal .accordion-button:not(.collapsed){
+  background: rgba(255,255,255,0.12);
+  box-shadow: none;
+}
+
+/* Чуть светлее подложку, чтобы контент под ней не «давил» */
+.modal-backdrop.show{ opacity: .35; }
+
+/* Ярче кнопки действий в таблице песен */
+.table .text-end > .btn-ghost{
+  /* Подробнее — первая кнопка (в ячейке она не в <form>) */
+  opacity: 1;
+  color: #eaf2ff;                             /* явный цвет текста */
+  border-color: rgba(110,168,254,.55);
+  background: rgba(110,168,254,.12);
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(110,168,254,.18);
+}
+
+.table .text-end > .btn-ghost i{ opacity: .95; }
+
+/* Ховер/фокус для Подробнее */
+.table .text-end > .btn-ghost:hover,
+.table .text-end > .btn-ghost:focus{
+  color: #fff;
+  background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(178,107,255,.35);
+}
+
+/* Удалить — кнопка внутри <form> в той же ячейке */
+.table .text-end form .btn-ghost{
+  opacity: 1;
+  color: #ffdede;
+  border-color: rgba(255,99,99,.55);
+  background: rgba(255,99,99,.10);
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(255,99,99,.18);
+}
+
+/* Ховер/фокус для Удалить (ярче, но без сплошного градиента) */
+.table .text-end form .btn-ghost:hover,
+.table .text-end form .btn-ghost:focus{
+  color: #fff;
+  background: rgba(255,99,99,.22);
+  border-color: rgba(255,99,99,.8);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(255,99,99,.32);
+}
+
+/* Чуть усилим видимость в строке при ховере */
+.table tbody tr:hover .text-end .btn-ghost{
+  filter: brightness(1.03);
+}
+
+/* --- Кнопки действий в таблице: высокая контрастность --- */
+
+/* Общие правки: текст читаемый */
+.table .text-end .btn-ghost{
+  opacity: 1 !important;
+  color: #fff !important;                 /* чисто белый текст */
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);   /* контраст на светлом фоне */
+  mix-blend-mode: normal;
+}
+
+/* Иконки тоже белые */
+.table .text-end .btn-ghost i{
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Подробнее (первая кнопка в ячейке) — насыщенно-синий фон */
+.table .text-end > .btn-ghost{
+  background: linear-gradient(180deg, rgba(70,127,255,.90), rgba(70,127,255,.75)) !important;
+  border-color: rgba(70,127,255,1) !important;
+  box-shadow: 0 8px 20px rgba(70,127,255,.35);
+}
+
+/* Удалить (кнопка внутри form) — насыщенно-красный фон */
+.table .text-end form .btn-ghost{
+  background: linear-gradient(180deg, rgba(255,90,90,.92), rgba(255,90,90,.78)) !important;
+  border-color: rgba(255,90,90,1) !important;
+  box-shadow: 0 8px 20px rgba(255,90,90,.35);
+}
+
+/* Ховер-состояния — чуть ярче и приподнимаем */
+.table .text-end .btn-ghost:hover,
+.table .text-end .btn-ghost:focus{
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(0,0,0,.25);
+}
+
+.ratio-16x9{ aspect-ratio: 16 / 9; display:block; } /*для превью*/
+

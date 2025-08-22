@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Ваши песни{% endblock %}
+
 {% block content %}
 <section class="py-3">
   <div class="d-flex align-items-center justify-content-between mb-2">
@@ -17,7 +18,8 @@
 
   {% if artist_filter %}
     <div class="mb-3">
-      <span class="badge-modern"><i class="bi bi-person-music me-1"></i>Фильтр: <strong class="ms-1">{{ artist_filter }}</strong></span>
+      <span class="badge-modern"><i class="bi bi-person-music me-1"></i>Фильтр:
+        <strong class="ms-1">{{ artist_filter }}</strong></span>
     </div>
   {% endif %}
 
@@ -62,8 +64,12 @@
             <td class="fw-semibold">{{ t.title }}</td>
             <td class="text-secondary">{{ t.artist }}</td>
             <td class="text-end">
+              <button class="btn btn-ghost btn-sm me-1"
+                      data-bs-toggle="modal" data-bs-target="#detailsModal-{{ t.id }}">
+                <i class="bi bi-info-circle me-1"></i>Подробнее
+              </button>
               <form method="post" action="{{ url_for('delete_song', track_id=t.id) }}"
-                    onsubmit="return confirm('Удалить «{{ t.title }}»?')">
+                    class="d-inline" onsubmit="return confirm('Удалить «{{ t.title }}»?')">
                 <button class="btn btn-ghost btn-sm"><i class="bi bi-trash me-1"></i>Удалить</button>
               </form>
             </td>
@@ -99,18 +105,18 @@
   function fill(el, items){ el.innerHTML=''; items.forEach(v=>{ const o=document.createElement('option'); o.value=v; el.appendChild(o); }); }
 
   const updArtist = debounce(async ()=>{
-    const q=(artistInput.value||'').trim(); if(!q){ artistList.innerHTML=''; return; }
+    const q=(artistInput?.value||'').trim(); if(!q){ artistList.innerHTML=''; return; }
     fill(artistList, await j(`/api/suggest/artists?q=${encodeURIComponent(q)}`));
   }, 180);
 
   const updTitle = debounce(async ()=>{
-    const q=(titleInput.value||'').trim(); if(!q){ titleList.innerHTML=''; return; }
-    const a=(artistInput.value||'').trim();
+    const q=(titleInput?.value||'').trim(); if(!q){ titleList.innerHTML=''; return; }
+    const a=(artistInput?.value||'').trim();
     fill(titleList, await j(`/api/suggest/tracks?q=${encodeURIComponent(q)}&artist=${encodeURIComponent(a)}`));
   }, 180);
 
   const updFilter = debounce(async ()=>{
-    const q=(artistFilter.value||'').trim(); if(!q){ artistFilterList.innerHTML=''; return; }
+    const q=(artistFilter?.value||'').trim(); if(!q){ artistFilterList.innerHTML=''; return; }
     fill(artistFilterList, await j(`/api/suggest/artists?q=${encodeURIComponent(q)}`));
   }, 180);
 
@@ -119,4 +125,61 @@
   artistFilter?.addEventListener('input', updFilter);
 })();
 </script>
+{% endblock %}
+
+{% block modals %}
+  {% for t in tracks %}
+    {% set d = details_by_track.get(t.id) if details_by_track else None %}
+    <div class="modal fade" id="detailsModal-{{ t.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass p-2">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">
+              <i class="bi bi-music-note-beamed me-2"></i>
+              {{ t.title }} <span class="text-secondary">— {{ t.artist }}</span>
+            </h5>
+            <button type="button" class="btn btn-ghost" data-bs-dismiss="modal" aria-label="Close">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            {% if d %}
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge-modern"><i class="bi bi-calendar2-week me-1"></i>Год:
+                  <strong class="ms-1">{{ d.year or "—" }}</strong></span>
+                <span class="badge-modern"><i class="bi bi-disc me-1"></i>Альбом:
+                  <strong class="ms-1">{{ d.album or "—" }}</strong></span>
+              </div>
+              <div class="accordion" id="lyrics-acc-{{ t.id }}">
+                <div class="accordion-item glass" style="border-radius: 12px;">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#lyrics-body-{{ t.id }}" aria-expanded="false">
+                      <i class="bi bi-file-music me-2"></i>Текст песни
+                    </button>
+                  </h2>
+                  <div id="lyrics-body-{{ t.id }}" class="accordion-collapse collapse" data-bs-parent="#lyrics-acc-{{ t.id }}">
+                    <div class="accordion-body">
+                    {% if d.lyrics %}
+                      <div class="lyrics-scroll">
+                        <pre class="lyrics">{{ d.lyrics }}</pre>
+                      </div>
+                    {% else %}
+                      <span class="text-secondary">Текст не указан.</span>
+                    {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <div class="text-secondary">Не найдено информации об альбоме/годе/тексте в каталоге.</div>
+            {% endif %}
+          </div>
+          <div class="modal-footer border-0">
+            <button class="btn btn-ghost" data-bs-dismiss="modal">Закрыть</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 {% endblock %}
