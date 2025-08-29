@@ -40,6 +40,10 @@ def create_app():
 
     # --- Инициализация ---
     db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
+
     Migrate(app, db)
 
     login_manager = LoginManager(app)
@@ -516,3 +520,4 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
