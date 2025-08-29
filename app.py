@@ -40,10 +40,6 @@ def create_app():
 
     # --- Инициализация ---
     db.init_app(app)
-
-    with app.app_context():
-        db.create_all()
-
     Migrate(app, db)
 
     login_manager = LoginManager(app)
@@ -275,17 +271,18 @@ def create_app():
             title = form.title.data.strip()
             artist = form.artist.data.strip()
 
-            # Если есть точное совпадение в каталоге — нормализуем регистр/пробелы
-            c = (
-                db.session.query(Catalog)
-                .filter(
-                    func.lower(Catalog.title) == title.lower(),
-                    func.lower(Catalog.artist) == artist.lower(),
+            # Нормализация из Catalog только если оба поля заполнены
+            if title and artist:
+                c = (
+                    db.session.query(Catalog)
+                    .filter(
+                        func.lower(Catalog.title) == title.lower(),
+                        func.lower(Catalog.artist) == artist.lower(),
+                    )
+                    .first()
                 )
-                .first()
-            )
-            if c:
-                title, artist = c.title, c.artist
+                if c:
+                    title, artist = c.title, c.artist
 
             track = Track(title=title, artist=artist, owner=current_user)
             try:
@@ -296,6 +293,7 @@ def create_app():
             except Exception:
                 db.session.rollback()
                 flash("Такой трек уже есть в вашем списке", "warning")
+
 
         # фильтр по исполнителю 
         artist_q = request.args.get("artist", "", type=str).strip()
